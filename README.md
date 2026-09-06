@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pomodoro
 
-## Getting Started
+A minimalist, single-page Pomodoro timer with accounts, persistent server-side
+timers, statistics, and a leaderboard.
 
-First, run the development server:
+## Features
+
+- Username/password auth (bcrypt-hashed, session cookies)
+- Work/break timer with presets and custom durations, backed by a
+  server-persisted timer so it survives closing the browser
+- Sound + browser notifications on work/break completion
+- Session history, statistics (average, standard deviation), and a chart with
+  weekly/monthly/yearly views
+- Leaderboard by total completed work time
+- Export/import session history as Excel (`.xlsx`)
+
+## Getting started
+
+1. Make sure MongoDB is running and reachable at the URI in `.env`
+   (defaults to `mongodb://localhost:27017/pomodoro`).
+2. Install dependencies and start the dev server:
+
+   ```bash
+   npm install
+   npm run dev
+   ```
+
+3. Open [http://localhost:3000](http://localhost:3000).
+
+## Project structure
+
+- `app/page.tsx` — the single route; renders the auth panel or the app
+- `components/` — UI components (client components only where interactivity
+  is required)
+- `hooks/` — client-side stateful logic (the timer's sync/countdown machinery)
+- `lib/actions/` — server actions (auth, timer, stats, export/import)
+- `lib/` — database connection, auth, timer resolution, stats queries,
+  validation, types, and small browser-API utilities (sound, notifications)
+
+## Scripts
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev      # start the dev server
+npm run build    # production build
+npm run start    # run the production build
+npm run lint     # eslint
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
