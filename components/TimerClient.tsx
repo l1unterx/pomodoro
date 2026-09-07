@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTimer } from "@/hooks/useTimer";
 import type { ResolvedTimerState } from "@/lib/timer";
 import {
@@ -47,6 +47,10 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
   const isIdle = state.status === "idle";
   const isRunning = state.status === "running";
   const isPaused = state.status === "paused";
+
+  useEffect(() => {
+    document.title = isIdle ? "Pomodoro" : `${formatTime(remaining)} · ${state.mode === "work" ? "Timer" : "Break"}`;
+  }, [isIdle, remaining, state]);
 
   return (
     <section id="timer" className="mx-auto flex w-full max-w-xl flex-col items-center gap-8 px-4 py-12">
