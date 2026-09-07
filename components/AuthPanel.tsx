@@ -17,21 +17,24 @@ export default function AuthPanel() {
 
   return (
     <div className="mx-auto flex min-h-[80vh] w-full max-w-sm flex-col items-center justify-center gap-8 px-4">
-      <h1 className="text-2xl font-bold uppercase tracking-widest">Pomodoro</h1>
+      <div className="flex flex-col items-center gap-1">
+        <span className="h-3 w-3 rounded-full bg-accent shadow-lg shadow-accent/50" />
+        <h1 className="mt-2 text-2xl font-bold tracking-tight">Pomodoro</h1>
+      </div>
 
-      <div className="flex w-full border border-foreground">
+      <div className="flex w-full gap-1 rounded-full bg-surface p-1">
         <button
           onClick={() => setTab("login")}
-          className={`flex-1 py-2 text-sm uppercase tracking-wide ${
-            tab === "login" ? "bg-foreground text-background" : "hover:bg-foreground/10"
+          className={`flex-1 rounded-full py-2 text-sm font-medium transition-colors ${
+            tab === "login" ? "bg-accent text-background" : "text-muted hover:text-foreground"
           }`}
         >
           Log in
         </button>
         <button
           onClick={() => setTab("register")}
-          className={`flex-1 py-2 text-sm uppercase tracking-wide border-l border-foreground ${
-            tab === "register" ? "bg-foreground text-background" : "hover:bg-foreground/10"
+          className={`flex-1 rounded-full py-2 text-sm font-medium transition-colors ${
+            tab === "register" ? "bg-accent text-background" : "text-muted hover:text-foreground"
           }`}
         >
           Register
@@ -41,7 +44,7 @@ export default function AuthPanel() {
       {tab === "login" ? (
         <form action={loginFormAction} className="flex w-full flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <label htmlFor="login-username" className="text-sm">
+            <label htmlFor="login-username" className="text-sm text-muted">
               Username
             </label>
             <input
@@ -50,11 +53,11 @@ export default function AuthPanel() {
               type="text"
               required
               autoComplete="username"
-              className="border border-foreground px-3 py-2 focus:outline-none"
+              className="rounded-xl border border-border bg-surface px-3 py-2.5 focus:border-accent focus:outline-none"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label htmlFor="login-password" className="text-sm">
+            <label htmlFor="login-password" className="text-sm text-muted">
               Password
             </label>
             <input
@@ -63,13 +66,13 @@ export default function AuthPanel() {
               type="password"
               required
               autoComplete="current-password"
-              className="border border-foreground px-3 py-2 focus:outline-none"
+              className="rounded-xl border border-border bg-surface px-3 py-2.5 focus:border-accent focus:outline-none"
             />
           </div>
           <button
             type="submit"
             disabled={loginPending}
-            className="border border-foreground px-3 py-2 text-sm uppercase tracking-wide hover:bg-foreground hover:text-background disabled:hover:bg-transparent disabled:hover:text-foreground"
+            className="rounded-full bg-accent py-2.5 text-sm font-semibold uppercase tracking-wide text-background shadow-lg shadow-accent/30 transition-transform hover:scale-105 disabled:hover:scale-100"
           >
             {loginPending ? "Logging in..." : "Log in"}
           </button>
@@ -77,7 +80,7 @@ export default function AuthPanel() {
       ) : (
         <form action={registerFormAction} className="flex w-full flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <label htmlFor="register-username" className="text-sm">
+            <label htmlFor="register-username" className="text-sm text-muted">
               Username
             </label>
             <input
@@ -89,11 +92,11 @@ export default function AuthPanel() {
               maxLength={20}
               pattern="[a-zA-Z0-9_]+"
               autoComplete="username"
-              className="border border-foreground px-3 py-2 focus:outline-none"
+              className="rounded-xl border border-border bg-surface px-3 py-2.5 focus:border-accent focus:outline-none"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label htmlFor="register-password" className="text-sm">
+            <label htmlFor="register-password" className="text-sm text-muted">
               Password
             </label>
             <input
@@ -103,13 +106,13 @@ export default function AuthPanel() {
               required
               minLength={8}
               autoComplete="new-password"
-              className="border border-foreground px-3 py-2 focus:outline-none"
+              className="rounded-xl border border-border bg-surface px-3 py-2.5 focus:border-accent focus:outline-none"
             />
           </div>
           <button
             type="submit"
             disabled={registerPending}
-            className="border border-foreground px-3 py-2 text-sm uppercase tracking-wide hover:bg-foreground hover:text-background disabled:hover:bg-transparent disabled:hover:text-foreground"
+            className="rounded-full bg-accent py-2.5 text-sm font-semibold uppercase tracking-wide text-background shadow-lg shadow-accent/30 transition-transform hover:scale-105 disabled:hover:scale-100"
           >
             {registerPending ? "Creating account..." : "Register"}
           </button>

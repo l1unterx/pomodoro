@@ -16,14 +16,19 @@ export default function SessionHistory({ items }: { items: SessionHistoryItem[] 
   }
 
   return (
-    <ul className="flex flex-col divide-y divide-foreground/20 border border-foreground">
+    <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface shadow-lg shadow-black/20">
       {items.map((item) => (
-        <li key={item.id} className="flex items-center justify-between gap-4 px-4 py-3">
+        <li
+          key={item.id}
+          className="flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-surface-hover"
+        >
           <div className="flex flex-col">
             <span className="text-sm">{item.title}</span>
             <span className="text-xs text-muted">{formatDateTime(item.startTime)}</span>
           </div>
-          <span className="shrink-0 text-sm tabular-nums">{formatMinutes(item.duration)}</span>
+          <span className="shrink-0 rounded-full bg-background px-3 py-1 text-sm tabular-nums text-muted">
+            {formatMinutes(item.duration)}
+          </span>
         </li>
       ))}
     </ul>

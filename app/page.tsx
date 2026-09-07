@@ -32,26 +32,26 @@ export default async function HomePage() {
       <TimerClient initialState={timerState} />
 
       <section className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-12">
-        <h2 className="text-sm uppercase tracking-widest text-muted">Session history</h2>
+        <h2 className="text-sm font-medium uppercase tracking-widest text-muted">Session history</h2>
         <SessionHistory items={history} />
       </section>
 
       <section className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-12">
-        <h2 className="text-sm uppercase tracking-widest text-muted">Your statistics</h2>
+        <h2 className="text-sm font-medium uppercase tracking-widest text-muted">Your statistics</h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <StatCard label="Total work time" value={formatDuration(stats.totalWorkSeconds)} />
           <StatCard label="Completed sessions" value={String(stats.completedSessions)} />
           <StatCard label="Avg. session" value={formatDuration(stats.averageDurationSeconds)} />
           <StatCard label="Std. deviation" value={formatDuration(stats.stdDevSeconds)} />
         </div>
-        <div className="flex flex-col gap-4">
-          <h3 className="text-xs uppercase tracking-widest text-muted">Work time over time</h3>
+        <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-6">
+          <h3 className="text-xs font-medium uppercase tracking-widest text-muted">Work time over time</h3>
           <WorkTimeChart initialPoints={monthlyPoints} initialPeriod="month" />
         </div>
       </section>
 
       <section className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-12">
-        <h2 className="text-sm uppercase tracking-widest text-muted">Leaderboard</h2>
+        <h2 className="text-sm font-medium uppercase tracking-widest text-muted">Leaderboard</h2>
         <LeaderboardTable rows={leaderboard} highlightUserId={user.id} />
       </section>
     </div>

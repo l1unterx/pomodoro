@@ -3,7 +3,11 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { logoutAction } from "@/lib/actions/auth";
-import { clearAllDataAction, exportSessionsAction, importSessionsAction } from "@/lib/actions/data";
+import {
+  clearAllDataAction,
+  exportSessionsAction,
+  importSessionsAction,
+} from "@/lib/actions/data";
 import LightModePrank from "@/components/LightModePrank";
 
 function downloadBase64(filename: string, base64: string): void {
@@ -91,14 +95,37 @@ export default function AccountBar({ username }: { username: string }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <LightModePrank />
 
-        <div className="flex items-center gap-3 text-sm">
-          <span className="text-muted">{username}</span>
-          <button onClick={() => void handleExport()} disabled={busy} className="underline hover:no-underline disabled:opacity-40">
-            Export
-          </button>
-          <button onClick={handleImportClick} disabled={busy} className="underline hover:no-underline disabled:opacity-40">
-            Import
-          </button>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="mr-1 text-muted">{username}</span>
+
+          <details className="relative">
+            <summary className="list-none rounded-full px-3 py-1 text-muted transition-colors hover:bg-surface hover:text-foreground [&::-webkit-details-marker]:hidden">
+              More
+            </summary>
+            <div className="absolute right-0 z-10 mt-2 flex w-40 flex-col gap-1 rounded-xl border border-border bg-surface p-1 shadow-lg shadow-black/30">
+              <button
+                onClick={() => void handleExport()}
+                disabled={busy}
+                className="rounded-lg px-3 py-1.5 text-left transition-colors hover:bg-surface-hover disabled:opacity-40"
+              >
+                Export
+              </button>
+              <button
+                onClick={handleImportClick}
+                disabled={busy}
+                className="rounded-lg px-3 py-1.5 text-left transition-colors hover:bg-surface-hover disabled:opacity-40"
+              >
+                Import
+              </button>
+              <button
+                onClick={() => void handleClearAll()}
+                disabled={busy}
+                className="rounded-lg px-3 py-1.5 text-left text-red-400 transition-colors hover:bg-surface-hover disabled:opacity-40"
+              >
+                Clear
+              </button>
+            </div>
+          </details>
           <input
             ref={fileInputRef}
             type="file"
@@ -106,11 +133,12 @@ export default function AccountBar({ username }: { username: string }) {
             onChange={(e) => void handleFileChange(e)}
             className="hidden"
           />
-          <button onClick={() => void handleClearAll()} disabled={busy} className="underline hover:no-underline disabled:opacity-40">
-            Clear
-          </button>
+
           <form action={logoutAction}>
-            <button type="submit" className="underline hover:no-underline">
+            <button
+              type="submit"
+              className="rounded-full bg-surface px-3 py-1 transition-colors hover:bg-surface-hover"
+            >
               Logout
             </button>
           </form>

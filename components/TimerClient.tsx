@@ -47,6 +47,7 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
   const isIdle = state.status === "idle";
   const isRunning = state.status === "running";
   const isPaused = state.status === "paused";
+  const accent = !isIdle && state.mode === "break" ? "var(--accent-break)" : "var(--accent)";
 
   useEffect(() => {
     document.title = isIdle ? "Pomodoro" : `${formatTime(remaining)} · ${state.mode === "work" ? "Timer" : "Break"}`;
@@ -55,29 +56,36 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
   return (
     <section id="timer" className="mx-auto flex w-full max-w-xl flex-col items-center gap-8 px-4 py-12">
       {banner && (
-        <div className="w-full border border-foreground px-4 py-3 text-center text-sm">{banner}</div>
+        <div
+          className="w-full rounded-2xl border px-4 py-3 text-center text-sm"
+          style={{ borderColor: accent, backgroundColor: `color-mix(in oklab, ${accent} 12%, transparent)` }}
+        >
+          {banner}
+        </div>
       )}
 
       {!isIdle && (
-        <div className="flex flex-col items-center gap-2">
-          <span className="text-sm uppercase tracking-[0.3em] text-muted">
+        <div
+          className="flex h-72 w-72 flex-col items-center justify-center gap-2 rounded-full border-2 bg-surface"
+          style={{ borderColor: accent, boxShadow: `0 0 70px -20px ${accent}` }}
+        >
+          <span className="rounded-full px-3 py-0.5 text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: accent }}>
             {state.mode === "work" ? "Work" : "Break"}
           </span>
+          <span className="font-mono text-6xl font-bold tabular-nums">{formatTime(remaining)}</span>
           {state.mode === "work" && state.workTitle && (
-            <span className="text-lg">{state.workTitle}</span>
+            <span className="max-w-56 truncate text-sm text-muted">{state.workTitle}</span>
           )}
-          <span className="font-mono text-7xl font-bold tabular-nums sm:text-8xl">
-            {formatTime(remaining)}
-          </span>
         </div>
       )}
 
       {!isIdle ? (
-        <div className="flex gap-4">
+        <div className="flex gap-3">
           {isRunning && (
             <button
               onClick={() => void pause()}
-              className="border border-foreground px-6 py-2 text-sm uppercase tracking-wide hover:bg-foreground hover:text-background"
+              className="rounded-full px-6 py-2 text-sm font-medium uppercase tracking-wide text-background transition-transform hover:scale-105"
+              style={{ backgroundColor: accent }}
             >
               Pause
             </button>
@@ -85,27 +93,30 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
           {isPaused && (
             <button
               onClick={() => void resume()}
-              className="border border-foreground px-6 py-2 text-sm uppercase tracking-wide hover:bg-foreground hover:text-background"
+              className="rounded-full px-6 py-2 text-sm font-medium uppercase tracking-wide text-background transition-transform hover:scale-105"
+              style={{ backgroundColor: accent }}
             >
               Resume
             </button>
           )}
           <button
             onClick={() => void reset()}
-            className="border border-foreground px-6 py-2 text-sm uppercase tracking-wide hover:bg-foreground hover:text-background"
+            className="rounded-full border border-border bg-surface px-6 py-2 text-sm font-medium uppercase tracking-wide transition-colors hover:bg-surface-hover"
           >
             Reset
           </button>
         </div>
       ) : (
         <div className="flex w-full flex-col items-center gap-6">
-          <fieldset className="flex flex-wrap justify-center gap-3">
+          <fieldset className="flex flex-wrap justify-center gap-2">
             {(Object.keys(PRESETS) as Array<Exclude<PresetKey, "custom">>).map((key) => (
               <button
                 key={key}
                 onClick={() => setPreset(key)}
-                className={`border border-foreground px-4 py-2 text-sm ${
-                  preset === key ? "bg-foreground text-background" : "hover:bg-foreground hover:text-background"
+                className={`rounded-full px-4 py-2 text-sm transition-colors ${
+                  preset === key
+                    ? "bg-accent text-background"
+                    : "bg-surface text-muted hover:bg-surface-hover hover:text-foreground"
                 }`}
               >
                 {PRESETS[key].label}
@@ -113,8 +124,10 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
             ))}
             <button
               onClick={() => setPreset("custom")}
-              className={`border border-foreground px-4 py-2 text-sm ${
-                preset === "custom" ? "bg-foreground text-background" : "hover:bg-foreground hover:text-background"
+              className={`rounded-full px-4 py-2 text-sm transition-colors ${
+                preset === "custom"
+                  ? "bg-accent text-background"
+                  : "bg-surface text-muted hover:bg-surface-hover hover:text-foreground"
               }`}
             >
               Custom
@@ -123,7 +136,7 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
 
           {preset === "custom" && (
             <div className="flex flex-wrap justify-center gap-6">
-              <label className="flex flex-col items-center gap-1 text-sm">
+              <label className="flex flex-col items-center gap-1 text-sm text-muted">
                 Work (min)
                 <input
                   type="number"
@@ -132,10 +145,10 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
                   max={MAX_WORK_MINUTES}
                   value={customWork}
                   onChange={(e) => setCustomWork(Number(e.target.value))}
-                  className="w-24 border border-foreground px-2 py-1 text-center"
+                  className="w-24 rounded-xl border border-border bg-surface px-2 py-1.5 text-center text-foreground focus:border-accent focus:outline-none"
                 />
               </label>
-              <label className="flex flex-col items-center gap-1 text-sm">
+              <label className="flex flex-col items-center gap-1 text-sm text-muted">
                 Break (min)
                 <input
                   type="number"
@@ -144,14 +157,14 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
                   max={MAX_BREAK_MINUTES}
                   value={customBreak}
                   onChange={(e) => setCustomBreak(Number(e.target.value))}
-                  className="w-24 border border-foreground px-2 py-1 text-center"
+                  className="w-24 rounded-xl border border-border bg-surface px-2 py-1.5 text-center text-foreground focus:border-accent focus:outline-none"
                 />
               </label>
             </div>
           )}
 
           <div className="flex w-full flex-col gap-1">
-            <label htmlFor="work-title" className="text-sm">
+            <label htmlFor="work-title" className="text-sm text-muted">
               What are you working on?
             </label>
             <input
@@ -161,14 +174,14 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
               maxLength={MAX_TITLE_LENGTH}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Fix authentication vulnerability"
-              className="border border-foreground px-3 py-2 focus:outline-none"
+              className="rounded-xl border border-border bg-surface px-3 py-2.5 focus:border-accent focus:outline-none"
             />
           </div>
 
           <button
             onClick={() => void handleStart()}
             disabled={busy}
-            className="border border-foreground px-8 py-3 text-sm uppercase tracking-wide hover:bg-foreground hover:text-background disabled:hover:bg-transparent disabled:hover:text-foreground"
+            className="rounded-full bg-accent px-10 py-3 text-sm font-semibold uppercase tracking-wide text-background shadow-lg shadow-accent/30 transition-transform hover:scale-105 disabled:hover:scale-100"
           >
             Start
           </button>

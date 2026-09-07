@@ -63,7 +63,7 @@ export default function LightModePrank() {
         ref={btnRef}
         type="button"
         onClick={handleClick}
-        className="border border-foreground px-3 py-1 text-sm hover:bg-foreground hover:text-background"
+        className="rounded-full bg-surface px-3 py-1 text-sm text-muted transition-colors hover:bg-surface-hover hover:text-foreground"
       >
         ☀ light mode
       </button>
@@ -72,7 +72,7 @@ export default function LightModePrank() {
           role="status"
           aria-live="polite"
           style={{ position: "fixed", top: pos.top, right: pos.right }}
-          className="z-20 max-w-60 border border-foreground bg-foreground px-3 py-2 text-sm text-background"
+          className="z-20 max-w-60 rounded-xl bg-foreground px-3 py-2 text-sm text-background shadow-lg"
         >
           {message}
         </div>

@@ -13,28 +13,28 @@ export default function LeaderboardTable({
   }
 
   return (
-    <div className="overflow-x-auto border border-foreground">
+    <div className="overflow-x-auto rounded-2xl border border-border bg-surface shadow-lg shadow-black/20">
       <table className="w-full min-w-120 border-collapse text-left text-sm">
         <thead>
-          <tr className="border-b border-foreground uppercase tracking-wide">
-            <th className="px-4 py-3 font-normal">Rank</th>
-            <th className="px-4 py-3 font-normal">Username</th>
-            <th className="px-4 py-3 font-normal">Total work time</th>
-            <th className="px-4 py-3 font-normal">Sessions</th>
+          <tr className="border-b border-border text-xs uppercase tracking-wide text-muted">
+            <th className="px-4 py-3 font-medium">Rank</th>
+            <th className="px-4 py-3 font-medium">Username</th>
+            <th className="px-4 py-3 font-medium">Total work time</th>
+            <th className="px-4 py-3 font-medium">Sessions</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (
             <tr
               key={row.userId}
-              className={`border-b border-foreground/30 last:border-0 ${
-                row.userId === highlightUserId ? "bg-foreground text-background" : ""
+              className={`border-b border-border/60 transition-colors last:border-0 hover:bg-surface-hover ${
+                row.userId === highlightUserId ? "bg-accent/10" : ""
               }`}
             >
-              <td className="px-4 py-3">{i + 1}</td>
+              <td className={`px-4 py-3 font-semibold ${i === 0 ? "text-accent" : "text-muted"}`}>{i + 1}</td>
               <td className="px-4 py-3">{row.username}</td>
-              <td className="px-4 py-3">{formatDuration(row.totalWorkSeconds)}</td>
-              <td className="px-4 py-3">{row.completedSessions}</td>
+              <td className="px-4 py-3 tabular-nums">{formatDuration(row.totalWorkSeconds)}</td>
+              <td className="px-4 py-3 tabular-nums">{row.completedSessions}</td>
             </tr>
           ))}
         </tbody>

@@ -76,13 +76,15 @@ export default function WorkTimeChart({
 
   return (
     <div className="flex flex-col gap-4">
-      <fieldset className="flex flex-wrap gap-3">
+      <fieldset className="flex flex-wrap gap-2">
         {PERIODS.map((p) => (
           <button
             key={p.key}
             onClick={() => handlePeriodChange(p.key)}
-            className={`border border-foreground px-4 py-1.5 text-sm ${
-              period === p.key ? "bg-foreground text-background" : "hover:bg-foreground hover:text-background"
+            className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
+              period === p.key
+                ? "bg-accent text-background"
+                : "bg-surface text-muted hover:bg-surface-hover hover:text-foreground"
             }`}
           >
             {p.label}
@@ -114,7 +116,15 @@ export default function WorkTimeChart({
             const w = Math.max(0, barWidth - BAR_GAP / 2);
             const titleText = p.titles.length > 0 ? ` — ${p.titles.join(", ")}` : "";
             return (
-              <rect key={p.key} x={x} y={CHART_HEIGHT - barHeight} width={w} height={barHeight} fill="var(--foreground)">
+              <rect
+                key={p.key}
+                x={x}
+                y={CHART_HEIGHT - barHeight}
+                width={w}
+                height={barHeight}
+                rx="1.5"
+                fill="var(--accent)"
+              >
                 <title>{`${formatLabel(p.key, period)}: ${formatMinutes(p.totalSeconds)}${titleText}`}</title>
               </rect>
             );
@@ -164,7 +174,7 @@ export default function WorkTimeChart({
         <div className="mt-2 overflow-x-auto">
           <table className="w-full min-w-120 border-collapse text-left text-xs">
             <thead>
-              <tr className="border-b border-foreground/30">
+              <tr className="border-b border-border">
                 <th className="py-1 pr-4 font-normal">Date</th>
                 <th className="py-1 pr-4 font-normal">Title</th>
                 <th className="py-1 font-normal">Work time</th>
@@ -172,7 +182,7 @@ export default function WorkTimeChart({
             </thead>
             <tbody>
               {points.map((p) => (
-                <tr key={p.key} className="border-b border-foreground/10">
+                <tr key={p.key} className="border-b border-border/50">
                   <td className="py-1 pr-4 align-top">{formatLabel(p.key, period)}</td>
                   <td className="py-1 pr-4 align-top text-muted">{p.titles.length > 0 ? p.titles.join(", ") : "—"}</td>
                   <td className="py-1 align-top">{formatMinutes(p.totalSeconds)}</td>
