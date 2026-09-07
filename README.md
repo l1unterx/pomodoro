@@ -3,45 +3,52 @@
 A minimalist, single-page Pomodoro timer with accounts, persistent server-side
 timers, statistics, and a leaderboard.
 
-## Features
+## Stack
 
-- Username/password auth (bcrypt-hashed, session cookies)
-- Work/break timer with presets and custom durations, backed by a
-  server-persisted timer so it survives closing the browser
-- Sound + browser notifications on work/break completion
-- Session history, statistics (average, standard deviation), and a chart with
-  weekly/monthly/yearly views
-- Leaderboard by total completed work time
-- Export/import session history as Excel (`.xlsx`)
+Next.js (App Router) · React · TypeScript · Tailwind CSS · MongoDB
 
 ## Getting started
 
-1. Make sure MongoDB is running and reachable at the URI in `.env`
-   (defaults to `mongodb://localhost:27017/pomodoro`).
-2. Install dependencies and start the dev server:
+```bash
+npm install
+npm run dev
+```
 
-   ```bash
-   npm install
-   npm run dev
-   ```
+Requires a running MongoDB instance. Set the connection string in `.env`:
 
-3. Open [http://localhost:3000](http://localhost:3000).
+```env
+MONGODB_URI=mongodb://localhost:27017/pomodoro
+```
 
-## Project structure
-
-- `app/page.tsx` — the single route; renders the auth panel or the app
-- `components/` — UI components (client components only where interactivity
-  is required)
-- `hooks/` — client-side stateful logic (the timer's sync/countdown machinery)
-- `lib/actions/` — server actions (auth, timer, stats, export/import)
-- `lib/` — database connection, auth, timer resolution, stats queries,
-  validation, types, and small browser-API utilities (sound, notifications)
+Open [http://localhost:3000](http://localhost:3000).
 
 ## Scripts
 
-```bash
-npm run dev      # start the dev server
-npm run build    # production build
-npm run start    # run the production build
-npm run lint     # eslint
+- `npm run dev` — start the dev server
+- `npm run build` — production build
+- `npm run start` — run the production build
+- `npm run lint` — lint
+
+## How it works
+
+- **Auth**: username/password, bcrypt-hashed, session cookie backed by a
+  Mongo-stored token (`lib/auth.ts`).
+- **Timer**: server-persisted (`activeTimers` collection) — `startedAt`/`endsAt`
+  timestamps are the source of truth, resolved lazily on read
+  (`lib/timer.ts`). No server-side interval; the browser only displays a
+  countdown while the page is open, and a completed work session is recorded
+  to `pomodoroSessions` the next time state is resolved (page load or an
+  in-tab sync), even if that happens well after the timer actually finished.
+- **Stats & leaderboard**: computed on read via MongoDB aggregation
+  (`lib/stats.ts`) — no denormalized counters to keep in sync.
+- **Export/Import**: session history as `.xlsx` (`lib/actions/data.ts`).
+
+## Project structure
+
+```
+app/                  the single "/" route + layout
+components/           UI components
+hooks/useTimer.ts     client-side timer state/sync logic
+lib/actions/          server actions (auth, timer, stats, data)
+lib/                  auth, db connection, business logic, types, validation
 ```
