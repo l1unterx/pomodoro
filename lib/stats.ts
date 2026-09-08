@@ -24,14 +24,6 @@ export interface LeaderboardRow {
   completedSessions: number;
 }
 
-export interface SessionHistoryItem {
-  id: string;
-  title: string;
-  startTime: string;
-  endTime: string;
-  duration: number;
-}
-
 export async function getUserStats(userId: string): Promise<UserStats> {
   const db = await getDb();
   const uid = new ObjectId(userId);
@@ -74,12 +66,6 @@ export async function getUserStats(userId: string): Promise<UserStats> {
   };
 }
 
-const PERIOD_CONFIG: Record<ChartPeriod, { buckets: number; granularity: "day" | "month" }> = {
-  week: { buckets: 7, granularity: "day" },
-  month: { buckets: 30, granularity: "day" },
-  year: { buckets: 12, granularity: "month" },
-};
-
 function dayKey(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
@@ -88,27 +74,50 @@ function monthKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-export async function getUserWorkTimeSeries(userId: string, period: ChartPeriod): Promise<WorkTimePoint[]> {
+// week: 7-day window, `offset` weeks back from the current one. month: a
+// calendar month (1st through its last day), `offset` months back. year: a
+// calendar year, January through December, `offset` years back. Anchoring
+// month/year to real calendar boundaries - rather than a rolling window -
+// keeps them from spilling into periods before the app had any data.
+function periodBounds(
+  period: ChartPeriod,
+  now: Date,
+  offset: number,
+): { since: Date; until: Date; buckets: number; granularity: "day" | "month" } {
+  if (period === "week") {
+    const since = new Date(now);
+    since.setHours(0, 0, 0, 0);
+    since.setDate(since.getDate() - 6 - offset * 7);
+    const until = new Date(since);
+    until.setDate(until.getDate() + 7);
+    return { since, until, buckets: 7, granularity: "day" };
+  }
+  if (period === "month") {
+    const since = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+    const until = new Date(since.getFullYear(), since.getMonth() + 1, 1);
+    const daysInMonth = new Date(since.getFullYear(), since.getMonth() + 1, 0).getDate();
+    return { since, until, buckets: daysInMonth, granularity: "day" };
+  }
+  const since = new Date(now.getFullYear() - offset, 0, 1);
+  const until = new Date(since.getFullYear() + 1, 0, 1);
+  return { since, until, buckets: 12, granularity: "month" };
+}
+
+export async function getUserWorkTimeSeries(
+  userId: string,
+  period: ChartPeriod,
+  offset = 0,
+): Promise<WorkTimePoint[]> {
   const db = await getDb();
   const uid = new ObjectId(userId);
-  const { buckets, granularity } = PERIOD_CONFIG[period];
-
-  const since = new Date();
-  if (granularity === "month") {
-    since.setDate(1);
-    since.setHours(0, 0, 0, 0);
-    since.setMonth(since.getMonth() - (buckets - 1));
-  } else {
-    since.setHours(0, 0, 0, 0);
-    since.setDate(since.getDate() - (buckets - 1));
-  }
+  const { since, until, buckets, granularity } = periodBounds(period, new Date(), offset);
 
   const dateFormat = granularity === "month" ? "%Y-%m" : "%Y-%m-%d";
 
   const rows = await db
     .collection<PomodoroSessionDoc>("pomodoroSessions")
     .aggregate<{ _id: string; totalSeconds: number; titles: string[] }>([
-      { $match: { userId: uid, endTime: { $gte: since } } },
+      { $match: { userId: uid, endTime: { $gte: since, $lt: until } } },
       {
         $group: {
           _id: { $dateToString: { format: dateFormat, date: "$endTime" } },
@@ -183,25 +192,5 @@ export async function getLeaderboard(limit = 20): Promise<LeaderboardRow[]> {
     username: r.username,
     totalWorkSeconds: r.totalWorkSeconds,
     completedSessions: r.completedSessions,
-  }));
-}
-
-export async function getSessionHistory(userId: string, limit = 20): Promise<SessionHistoryItem[]> {
-  const db = await getDb();
-  const uid = new ObjectId(userId);
-
-  const rows = await db
-    .collection<PomodoroSessionDoc>("pomodoroSessions")
-    .find({ userId: uid }, { projection: { title: 1, startTime: 1, endTime: 1, duration: 1 } })
-    .sort({ startTime: -1 })
-    .limit(limit)
-    .toArray();
-
-  return rows.map((r) => ({
-    id: r._id.toHexString(),
-    title: r.title,
-    startTime: r.startTime.toISOString(),
-    endTime: r.endTime.toISOString(),
-    duration: r.duration,
   }));
 }

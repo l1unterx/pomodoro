@@ -1,18 +1,15 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { getWorkTimeSeriesAction } from "@/lib/actions/stats";
+import { useState } from "react";
 import type { ChartPeriod, WorkTimePoint } from "@/lib/stats";
 import { formatDuration, formatMinutes } from "@/lib/format";
 
-const CHART_HEIGHT = 160;
-const BAR_GAP = 4;
-
-const PERIODS: { key: ChartPeriod; label: string }[] = [
-  { key: "week", label: "Weekly" },
-  { key: "month", label: "Monthly" },
-  { key: "year", label: "Yearly" },
-];
+const VB_W = 640;
+const VB_H = 180;
+const MARGIN = { top: 14, right: 12, bottom: 28, left: 42 };
+const PLOT_W = VB_W - MARGIN.left - MARGIN.right;
+const PLOT_H = VB_H - MARGIN.top - MARGIN.bottom;
+const BAR_GAP = 3;
 
 function formatLabel(key: string, period: ChartPeriod): string {
   if (period === "year") {
@@ -41,157 +38,163 @@ function sampleStdDev(values: number[], avg: number): number {
   return Math.sqrt(variance);
 }
 
-export default function WorkTimeChart({
-  initialPoints,
-  initialPeriod,
-}: {
-  initialPoints: WorkTimePoint[];
-  initialPeriod: ChartPeriod;
-}) {
-  const [period, setPeriod] = useState(initialPeriod);
-  const [points, setPoints] = useState(initialPoints);
-  const [isPending, startTransition] = useTransition();
+function currentKey(period: ChartPeriod): string {
+  const now = new Date();
+  if (period === "year") return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  return now.toISOString().slice(0, 10);
+}
 
-  const handlePeriodChange = (next: ChartPeriod) => {
-    setPeriod(next);
-    startTransition(async () => {
-      const data = await getWorkTimeSeriesAction(next);
-      setPoints(data);
-    });
-  };
+// Only average over the selected range's elapsed days: drop not-yet-happened
+// buckets (a month/year view renders the whole calendar, including days that
+// haven't occurred yet) and any leading empty days before the user's first
+// session in range - both would otherwise drag the average down artificially.
+function statsSinceStart(points: WorkTimePoint[], period: ChartPeriod) {
+  const today = currentKey(period);
+  const elapsed = points.filter((p) => p.key <= today);
+  const firstActive = elapsed.findIndex((p) => p.totalSeconds > 0);
+  const active = firstActive === -1 ? [] : elapsed.slice(firstActive).map((p) => p.totalSeconds);
+  const avg = mean(active);
+  return { avg, std: sampleStdDev(active, avg) };
+}
 
-  const totals = points.map((p) => p.totalSeconds);
-  const maxSeconds = Math.max(1, ...totals);
-  const avg = mean(totals);
-  const std = sampleStdDev(totals, avg);
-  const stdIsLow = std < avg;
-  const stdColor = stdIsLow ? "#ef4444" : "#22c55e";
+export default function WorkTimeChart({ points, period }: { points: WorkTimePoint[]; period: ChartPeriod }) {
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
-  const barWidth = points.length > 0 ? 100 / points.length : 0;
+  const maxSeconds = Math.max(1, ...points.map((p) => p.totalSeconds));
+  const { avg, std } = statsSinceStart(points, period);
+  const stdColor = std < avg ? "#ef4444" : "#22c55e";
 
-  const valueToY = (value: number) => {
-    const clamped = Math.max(0, Math.min(value, maxSeconds));
-    return CHART_HEIGHT - (clamped / maxSeconds) * (CHART_HEIGHT - 8);
-  };
+  const slotWidth = points.length > 0 ? PLOT_W / points.length : 0;
+  const valueToY = (value: number) => MARGIN.top + PLOT_H - (Math.min(value, maxSeconds) / maxSeconds) * PLOT_H;
+
+  const tickStep = Math.max(1, Math.ceil(points.length / 6));
+  const xTicks = points
+    .map((p, i) => ({ p, i }))
+    .filter(({ i }) => i % tickStep === 0 || i === points.length - 1);
+
+  const yTicks = [0, 1 / 3, 2 / 3, 1].map((f) => f * maxSeconds);
+
+  const hovered = hoverIndex !== null ? points[hoverIndex] : null;
+  const hoverX = hoverIndex !== null ? MARGIN.left + hoverIndex * slotWidth + slotWidth / 2 : 0;
+  const hoverY = hovered ? valueToY(hovered.totalSeconds) : 0;
 
   return (
-    <div className="flex flex-col gap-4">
-      <fieldset className="flex flex-wrap gap-2">
-        {PERIODS.map((p) => (
-          <button
-            key={p.key}
-            onClick={() => handlePeriodChange(p.key)}
-            className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
-              period === p.key
-                ? "bg-accent text-background"
-                : "bg-surface text-muted hover:bg-surface-hover hover:text-foreground"
-            }`}
-          >
-            {p.label}
-          </button>
-        ))}
-      </fieldset>
-
-      <div className={`flex flex-col gap-3 ${isPending ? "opacity-50" : ""}`}>
-        <svg
-          role="img"
-          aria-label="Work time per period"
-          viewBox={`0 0 100 ${CHART_HEIGHT}`}
-          preserveAspectRatio="none"
-          className="h-40 w-full"
-        >
-          <line
-            x1="0"
-            y1={CHART_HEIGHT - 0.5}
-            x2="100"
-            y2={CHART_HEIGHT - 0.5}
-            stroke="var(--muted)"
-            strokeWidth="0.5"
-          />
-
-          {points.map((p, i) => {
-            const heightRatio = p.totalSeconds / maxSeconds;
-            const barHeight = Math.max(p.totalSeconds > 0 ? 2 : 0, heightRatio * (CHART_HEIGHT - 8));
-            const x = i * barWidth + BAR_GAP / 4;
-            const w = Math.max(0, barWidth - BAR_GAP / 2);
-            const titleText = p.titles.length > 0 ? ` — ${p.titles.join(", ")}` : "";
-            return (
-              <rect
-                key={p.key}
-                x={x}
-                y={CHART_HEIGHT - barHeight}
-                width={w}
-                height={barHeight}
-                rx="1.5"
-                fill="var(--accent)"
-              >
-                <title>{`${formatLabel(p.key, period)}: ${formatMinutes(p.totalSeconds)}${titleText}`}</title>
-              </rect>
-            );
-          })}
-
-          <line
-            x1="0"
-            x2="100"
-            y1={valueToY(avg)}
-            y2={valueToY(avg)}
-            stroke="#9ca3af"
-            strokeWidth="0.6"
-            strokeDasharray="3 2"
-            vectorEffect="non-scaling-stroke"
-          />
-          <line
-            x1="0"
-            x2="100"
-            y1={valueToY(std)}
-            y2={valueToY(std)}
-            stroke={stdColor}
-            strokeWidth="0.6"
-            strokeDasharray="3 2"
-            vectorEffect="non-scaling-stroke"
-          />
-        </svg>
-
-        <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted">
-          <span className="flex items-center gap-2">
-            <span className="inline-block h-0.5 w-4" style={{ backgroundColor: "#9ca3af" }} />
-            Average: {formatDuration(avg)}
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="inline-block h-0.5 w-4" style={{ backgroundColor: stdColor }} />
-            Std. deviation: {formatDuration(std)}
-          </span>
-        </div>
-
-        <div className="flex justify-between text-xs text-muted">
-          <span>{points.length > 0 ? formatLabel(points[0].key, period) : ""}</span>
-          <span>{points.length > 0 ? formatLabel(points[points.length - 1].key, period) : ""}</span>
-        </div>
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap gap-2 text-xs">
+        <span className="flex items-center gap-1.5 rounded-full bg-background px-2.5 py-1">
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "#9ca3af" }} />
+          <span className="text-muted">Avg</span>
+          <span className="font-medium">{formatDuration(avg)}</span>
+        </span>
+        <span className="flex items-center gap-1.5 rounded-full bg-background px-2.5 py-1">
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: stdColor }} />
+          <span className="text-muted">Std dev</span>
+          <span className="font-medium">{formatDuration(std)}</span>
+        </span>
       </div>
 
-      <details>
-        <summary className="cursor-pointer text-xs text-muted hover:text-foreground">View as table</summary>
-        <div className="mt-2 overflow-x-auto">
-          <table className="w-full min-w-120 border-collapse text-left text-xs">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="py-1 pr-4 font-normal">Date</th>
-                <th className="py-1 pr-4 font-normal">Title</th>
-                <th className="py-1 font-normal">Work time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {points.map((p) => (
-                <tr key={p.key} className="border-b border-border/50">
-                  <td className="py-1 pr-4 align-top">{formatLabel(p.key, period)}</td>
-                  <td className="py-1 pr-4 align-top text-muted">{p.titles.length > 0 ? p.titles.join(", ") : "—"}</td>
-                  <td className="py-1 align-top">{formatMinutes(p.totalSeconds)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="relative max-h-52 w-full" style={{ aspectRatio: `${VB_W} / ${VB_H}` }}>
+      <svg
+        role="img"
+        aria-label="Work time per period"
+        viewBox={`0 0 ${VB_W} ${VB_H}`}
+        className="h-full w-full overflow-visible"
+      >
+        {yTicks.map((value, idx) => {
+          const y = valueToY(value);
+          return (
+            <g key={idx}>
+              <line x1={MARGIN.left} x2={VB_W - MARGIN.right} y1={y} y2={y} stroke="var(--border)" strokeWidth="1" />
+              <text x={MARGIN.left - 8} y={y + 3} textAnchor="end" fontSize="10" fill="var(--muted)">
+                {formatMinutes(value)}
+              </text>
+            </g>
+          );
+        })}
+
+        {xTicks.map(({ p, i }) => (
+          <text
+            key={p.key}
+            x={MARGIN.left + i * slotWidth + slotWidth / 2}
+            y={VB_H - MARGIN.bottom + 18}
+            textAnchor="middle"
+            fontSize="10"
+            fill="var(--muted)"
+          >
+            {formatLabel(p.key, period)}
+          </text>
+        ))}
+
+        {points.map((p, i) => {
+          const barHeight = Math.max(p.totalSeconds > 0 ? 2 : 0, (p.totalSeconds / maxSeconds) * PLOT_H);
+          const x = MARGIN.left + i * slotWidth + BAR_GAP;
+          const w = Math.max(0, slotWidth - BAR_GAP * 2);
+          return (
+            <rect
+              key={p.key}
+              x={x}
+              y={MARGIN.top + PLOT_H - barHeight}
+              width={w}
+              height={barHeight}
+              rx="3"
+              fill={hoverIndex === i ? "var(--accent-break)" : "var(--accent)"}
+              className="transition-[fill] duration-100"
+              onMouseEnter={() => setHoverIndex(i)}
+              onMouseLeave={() => setHoverIndex((cur) => (cur === i ? null : cur))}
+            />
+          );
+        })}
+
+        <line
+          x1={MARGIN.left}
+          x2={VB_W - MARGIN.right}
+          y1={valueToY(avg)}
+          y2={valueToY(avg)}
+          stroke="#9ca3af"
+          strokeWidth="1.5"
+          strokeDasharray="4 4"
+          strokeLinecap="round"
+        />
+
+        <line
+          x1={MARGIN.left}
+          x2={VB_W - MARGIN.right}
+          y1={valueToY(std)}
+          y2={valueToY(std)}
+          stroke={stdColor}
+          strokeWidth="1.5"
+          strokeDasharray="4 4"
+          strokeLinecap="round"
+        />
+
+        {hovered && (
+          <line
+            x1={hoverX}
+            x2={hoverX}
+            y1={MARGIN.top}
+            y2={VB_H - MARGIN.bottom}
+            stroke="var(--foreground)"
+            strokeOpacity="0.15"
+            strokeWidth="1"
+            pointerEvents="none"
+          />
+        )}
+      </svg>
+
+      {hovered && (
+        <div
+          className="pointer-events-none absolute z-10 whitespace-nowrap rounded-lg bg-foreground px-2.5 py-1.5 text-xs text-background shadow-lg"
+          style={{
+            left: `${(hoverX / VB_W) * 100}%`,
+            top: `${(hoverY / VB_H) * 100}%`,
+            transform: "translate(-50%, calc(-100% - 10px))",
+          }}
+        >
+          <div className="font-medium">{formatLabel(hovered.key, period)}</div>
+          <div className="text-background/70">{formatMinutes(hovered.totalSeconds)}</div>
         </div>
-      </details>
+      )}
+      </div>
     </div>
   );
 }

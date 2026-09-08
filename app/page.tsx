@@ -1,13 +1,12 @@
 import { getCurrentUser } from "@/lib/auth";
 import { resolveActiveTimer } from "@/lib/timer";
-import { getLeaderboard, getSessionHistory, getUserWorkTimeSeries, getUserStats } from "@/lib/stats";
+import { getLeaderboard, getUserWorkTimeSeries, getUserStats } from "@/lib/stats";
 import { formatDuration } from "@/lib/format";
 import AuthPanel from "@/components/AuthPanel";
 import AccountBar from "@/components/AccountBar";
 import TimerClient from "@/components/TimerClient";
-import SessionHistory from "@/components/SessionHistory";
+import WorkTimeSection from "@/components/WorkTimeSection";
 import StatCard from "@/components/StatCard";
-import WorkTimeChart from "@/components/WorkTimeChart";
 import LeaderboardTable from "@/components/LeaderboardTable";
 
 export default async function HomePage() {
@@ -17,12 +16,11 @@ export default async function HomePage() {
     return <AuthPanel />;
   }
 
-  const [timerState, stats, monthlyPoints, leaderboard, history] = await Promise.all([
+  const [timerState, stats, monthlyPoints, leaderboard] = await Promise.all([
     resolveActiveTimer(user.id),
     getUserStats(user.id),
     getUserWorkTimeSeries(user.id, "month"),
     getLeaderboard(10),
-    getSessionHistory(user.id, 20),
   ]);
 
   return (
@@ -30,11 +28,6 @@ export default async function HomePage() {
       <AccountBar username={user.username} />
 
       <TimerClient initialState={timerState} />
-
-      <section className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-12">
-        <h2 className="text-sm font-medium uppercase tracking-widest text-muted">Session history</h2>
-        <SessionHistory items={history} />
-      </section>
 
       <section className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-12">
         <h2 className="text-sm font-medium uppercase tracking-widest text-muted">Your statistics</h2>
@@ -44,11 +37,9 @@ export default async function HomePage() {
           <StatCard label="Avg. session" value={formatDuration(stats.averageDurationSeconds)} />
           <StatCard label="Std. deviation" value={formatDuration(stats.stdDevSeconds)} />
         </div>
-        <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-6">
-          <h3 className="text-xs font-medium uppercase tracking-widest text-muted">Work time over time</h3>
-          <WorkTimeChart initialPoints={monthlyPoints} initialPeriod="month" />
-        </div>
       </section>
+
+      <WorkTimeSection initialPoints={monthlyPoints} initialPeriod="month" />
 
       <section className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-12">
         <h2 className="text-sm font-medium uppercase tracking-widest text-muted">Leaderboard</h2>
