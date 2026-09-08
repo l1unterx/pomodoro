@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import { requireUser } from "@/lib/auth";
 import { resolveActiveTimer, type ResolvedTimerState } from "@/lib/timer";
-import type { ActiveTimerDoc } from "@/lib/types";
+import type { ActiveTimerDoc, PomodoroSessionDoc } from "@/lib/types";
 import {
   validateDurationMinutes,
   validateTitle,
@@ -130,10 +130,63 @@ export async function resumeTimerAction(): Promise<ResolvedTimerState> {
   };
 }
 
+export async function restartTimerAction(): Promise<ResolvedTimerState> {
+  const user = await requireUser();
+  const uid = new ObjectId(user.id);
+  const current = await resolveActiveTimer(user.id);
+
+  if (current.status === "idle") {
+    return current;
+  }
+
+  const db = await getDb();
+  const now = new Date();
+  const endsAt = new Date(now.getTime() + current.plannedDuration * 1000);
+  await db.collection<ActiveTimerDoc>("activeTimers").updateOne(
+    { _id: uid },
+    {
+      $set: {
+        status: "running",
+        startedAt: now,
+        endsAt,
+        remainingSeconds: null,
+      },
+    },
+  );
+
+  return {
+    status: "running",
+    mode: current.mode,
+    workTitle: current.workTitle,
+    plannedDuration: current.plannedDuration,
+    remainingSeconds: current.plannedDuration,
+    endsAt: endsAt.toISOString(),
+  };
+}
+
 export async function resetTimerAction(): Promise<ResolvedTimerState> {
   const user = await requireUser();
+  const uid = new ObjectId(user.id);
+  const current = await resolveActiveTimer(user.id);
   const db = await getDb();
-  await db.collection<ActiveTimerDoc>("activeTimers").deleteOne({ _id: new ObjectId(user.id) });
+
+  if (current.status !== "idle" && current.mode === "work" && current.workTitle) {
+    const elapsed = Math.round(current.plannedDuration - current.remainingSeconds);
+    if (elapsed > 0) {
+      const now = new Date();
+      await db.collection<PomodoroSessionDoc>("pomodoroSessions").insertOne({
+        _id: new ObjectId(),
+        userId: uid,
+        title: current.workTitle,
+        startTime: new Date(now.getTime() - elapsed * 1000),
+        endTime: now,
+        duration: elapsed,
+        createdAt: now,
+      });
+    }
+  }
+
+  await db.collection<ActiveTimerDoc>("activeTimers").deleteOne({ _id: uid });
   return { status: "idle" };
 }
 

@@ -8,7 +8,6 @@ import {
   exportSessionsAction,
   importSessionsAction,
 } from "@/lib/actions/data";
-import LightModePrank from "@/components/LightModePrank";
 
 function downloadBase64(filename: string, base64: string): void {
   const bytes = atob(base64);
@@ -93,13 +92,11 @@ export default function AccountBar({ username }: { username: string }) {
   return (
     <div className="flex flex-col gap-1 px-4 pt-4 sm:px-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <LightModePrank />
+        <span className="text-sm text-muted">{username}</span>
 
         <div className="flex items-center gap-2 text-sm">
-          <span className="mr-1 text-muted">{username}</span>
-
           <details className="relative">
-            <summary className="list-none rounded-full px-3 py-1 text-muted transition-colors hover:bg-surface hover:text-foreground [&::-webkit-details-marker]:hidden">
+            <summary className="list-none rounded-full bg-surface px-3 py-1 text-sm text-muted transition-colors hover:bg-surface-hover hover:text-foreground [&::-webkit-details-marker]:hidden">
               More
             </summary>
             <div className="absolute right-0 z-10 mt-2 flex w-40 flex-col gap-1 rounded-xl border border-border bg-surface p-1 shadow-lg shadow-black/30 backdrop-blur-xl">
@@ -137,7 +134,7 @@ export default function AccountBar({ username }: { username: string }) {
           <form action={logoutAction}>
             <button
               type="submit"
-              className="rounded-full bg-surface px-3 py-1 transition-colors hover:bg-surface-hover"
+              className="rounded-full bg-surface px-3 py-1 text-sm text-muted transition-colors hover:bg-surface-hover hover:text-foreground"
             >
               Logout
             </button>

@@ -6,6 +6,7 @@ import {
   startTimerAction,
   pauseTimerAction,
   resumeTimerAction,
+  restartTimerAction,
   resetTimerAction,
   syncTimerAction,
 } from "@/lib/actions/timer";
@@ -154,14 +155,23 @@ export function useTimer(initialState: ResolvedTimerState) {
     }
   };
 
-  const reset = async () => {
+  const restart = async () => {
     try {
-      applyState(await resetTimerAction());
-      setBanner(null);
+      applyState(await restartTimerAction());
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not reset session.");
+      setError(e instanceof Error ? e.message : "Could not restart session.");
     }
   };
 
-  return { state, remaining, error, banner, busy, start, pause, resume, reset };
+  const stop = async () => {
+    try {
+      applyState(await resetTimerAction());
+      setBanner(null);
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not stop session.");
+    }
+  };
+
+  return { state, remaining, error, banner, busy, start, pause, resume, restart, stop };
 }

@@ -62,7 +62,7 @@ export default function WorkTimeChart({ points, period }: { points: WorkTimePoin
 
   const maxSeconds = Math.max(1, ...points.map((p) => p.totalSeconds));
   const { avg, std } = statsSinceStart(points, period);
-  const stdColor = std < avg ? "#ef4444" : "#22c55e";
+  const stdColor = std < avg / 2 ? "#ef4444" : "#22c55e";
 
   const slotWidth = points.length > 0 ? PLOT_W / points.length : 0;
   const valueToY = (value: number) => MARGIN.top + PLOT_H - (Math.min(value, maxSeconds) / maxSeconds) * PLOT_H;

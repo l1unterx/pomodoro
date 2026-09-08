@@ -28,8 +28,48 @@ function formatTime(totalSeconds: number): string {
   return `${m}:${sec}`;
 }
 
+const ICON_PATHS = {
+  play: "M8 5v14l11-7z",
+  pause: "M7 5h4v14H7zM13 5h4v14h-4z",
+  restart: "M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z",
+  stop: "M6 6h12v12H6z",
+};
+
+function CircleButton({
+  onClick,
+  disabled,
+  label,
+  icon,
+  accent,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+  label: string;
+  icon: keyof typeof ICON_PATHS;
+  accent?: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      title={label}
+      className="flex h-16 w-16 items-center justify-center rounded-full border-2 transition-transform hover:scale-105 disabled:hover:scale-100"
+      style={
+        accent
+          ? { backgroundColor: accent, borderColor: accent, color: "var(--background)" }
+          : { backgroundColor: "var(--surface)", borderColor: "var(--border)", color: "var(--foreground)" }
+      }
+    >
+      <svg viewBox="0 0 24 24" className="h-6 w-6 fill-current">
+        <path d={ICON_PATHS[icon]} />
+      </svg>
+    </button>
+  );
+}
+
 export default function TimerClient({ initialState }: { initialState: ResolvedTimerState }) {
-  const { state, remaining, error, banner, busy, start, pause, resume, reset } = useTimer(initialState);
+  const { state, remaining, error, banner, busy, start, pause, resume, restart, stop } = useTimer(initialState);
 
   const [preset, setPreset] = useState<PresetKey>("30-5");
   const [customWork, setCustomWork] = useState(25);
@@ -80,31 +120,11 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
       )}
 
       {!isIdle ? (
-        <div className="flex gap-3">
-          {isRunning && (
-            <button
-              onClick={() => void pause()}
-              className="rounded-full px-6 py-2 text-sm font-medium uppercase tracking-wide text-background transition-transform hover:scale-105"
-              style={{ backgroundColor: accent }}
-            >
-              Pause
-            </button>
-          )}
-          {isPaused && (
-            <button
-              onClick={() => void resume()}
-              className="rounded-full px-6 py-2 text-sm font-medium uppercase tracking-wide text-background transition-transform hover:scale-105"
-              style={{ backgroundColor: accent }}
-            >
-              Resume
-            </button>
-          )}
-          <button
-            onClick={() => void reset()}
-            className="rounded-full border border-border bg-surface px-6 py-2 text-sm font-medium uppercase tracking-wide transition-colors hover:bg-surface-hover"
-          >
-            Reset
-          </button>
+        <div className="flex gap-4">
+          {isRunning && <CircleButton onClick={() => void pause()} label="Pause" icon="pause" accent={accent} />}
+          {isPaused && <CircleButton onClick={() => void resume()} label="Resume" icon="play" accent={accent} />}
+          <CircleButton onClick={() => void restart()} label="Restart" icon="restart" />
+          <CircleButton onClick={() => void stop()} label="Stop" icon="stop" />
         </div>
       ) : (
         <div className="flex w-full flex-col items-center gap-6">
@@ -178,13 +198,7 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
             />
           </div>
 
-          <button
-            onClick={() => void handleStart()}
-            disabled={busy}
-            className="rounded-full bg-accent px-10 py-3 text-sm font-semibold uppercase tracking-wide text-background shadow-lg shadow-accent/30 transition-transform hover:scale-105 disabled:hover:scale-100"
-          >
-            Start
-          </button>
+          <CircleButton onClick={() => void handleStart()} disabled={busy} label="Start" icon="play" accent="var(--accent)" />
         </div>
       )}
 
