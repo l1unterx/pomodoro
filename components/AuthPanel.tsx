@@ -22,7 +22,8 @@ export default function AuthPanel() {
         <h1 className="mt-2 text-2xl font-bold tracking-tight">Pomodoro</h1>
       </div>
 
-      <div className="flex w-full gap-1 rounded-full bg-surface p-1">
+      <div className="flex w-full flex-col gap-6 rounded-3xl border border-border bg-surface p-6 shadow-lg shadow-black/30 backdrop-blur-xl">
+      <div className="flex w-full gap-1 rounded-full bg-background/40 p-1">
         <button
           onClick={() => setTab("login")}
           className={`flex-1 rounded-full py-2 text-sm font-medium transition-colors ${
@@ -120,6 +121,7 @@ export default function AuthPanel() {
       )}
 
       {state.error && <p className="text-sm text-red-400">{state.error}</p>}
+      </div>
     </div>
   );
 }

@@ -102,7 +102,7 @@ export default function AccountBar({ username }: { username: string }) {
             <summary className="list-none rounded-full px-3 py-1 text-muted transition-colors hover:bg-surface hover:text-foreground [&::-webkit-details-marker]:hidden">
               More
             </summary>
-            <div className="absolute right-0 z-10 mt-2 flex w-40 flex-col gap-1 rounded-xl border border-border bg-surface p-1 shadow-lg shadow-black/30">
+            <div className="absolute right-0 z-10 mt-2 flex w-40 flex-col gap-1 rounded-xl border border-border bg-surface p-1 shadow-lg shadow-black/30 backdrop-blur-xl">
               <button
                 onClick={() => void handleExport()}
                 disabled={busy}

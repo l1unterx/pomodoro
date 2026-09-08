@@ -2,9 +2,9 @@
 
 :root {
   --background: #000000;
-  --surface: #19142a;
-  --surface-hover: #241c3a;
-  --border: #322852;
+  --surface: rgba(168, 85, 247, 0.08);
+  --surface-hover: rgba(168, 85, 247, 0.16);
+  --border: rgba(168, 85, 247, 0.25);
   --foreground: #f3f1f8;
   --muted: #9691ab;
   --accent: #a855f7;

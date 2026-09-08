@@ -76,7 +76,7 @@ export default function SessionHistory({ points, period }: { points: WorkTimePoi
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-2xl border border-border bg-surface p-4 shadow-lg shadow-black/20">
+      <div className="rounded-2xl border border-border bg-surface p-4 shadow-lg shadow-black/20 backdrop-blur-xl">
         {period === "year" ? (
           <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
             {points.map((p) => cell(p, monthAbbrev(p.key), "wide"))}
@@ -108,7 +108,7 @@ export default function SessionHistory({ points, period }: { points: WorkTimePoi
       </div>
 
       {selected && (
-        <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4 shadow-lg shadow-black/20">
+        <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4 shadow-lg shadow-black/20 backdrop-blur-xl">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">
               {period === "year" ? monthCellLabel(selected.key) : dayCellLabel(selected.key)}

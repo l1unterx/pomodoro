@@ -57,7 +57,7 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
     <section id="timer" className="mx-auto flex w-full max-w-xl flex-col items-center gap-8 px-4 py-12">
       {banner && (
         <div
-          className="w-full rounded-2xl border px-4 py-3 text-center text-sm"
+          className="w-full rounded-2xl border px-4 py-3 text-center text-sm backdrop-blur-xl"
           style={{ borderColor: accent, backgroundColor: `color-mix(in oklab, ${accent} 12%, transparent)` }}
         >
           {banner}
@@ -66,7 +66,7 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
 
       {!isIdle && (
         <div
-          className="flex h-72 w-72 flex-col items-center justify-center gap-2 rounded-full border-2 bg-surface"
+          className="flex h-72 w-72 flex-col items-center justify-center gap-2 rounded-full border-2 bg-surface backdrop-blur-2xl"
           style={{ borderColor: accent, boxShadow: `0 0 70px -20px ${accent}` }}
         >
           <span className="rounded-full px-3 py-0.5 text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: accent }}>
