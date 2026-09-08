@@ -78,7 +78,7 @@ export default function WorkTimeSection({
                 onClick={() => handlePeriodChange(p.key)}
                 className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
                   period === p.key
-                    ? "bg-accent text-background"
+                    ? "bg-accent text-white"
                     : "bg-surface text-muted hover:bg-surface-hover hover:text-foreground"
                 }`}
               >

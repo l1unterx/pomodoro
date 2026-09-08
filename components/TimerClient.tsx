@@ -249,7 +249,7 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
                   onClick={() => setPreset(key)}
                   className={`rounded-full px-4 py-2 text-sm transition-colors ${
                     preset === key
-                      ? "bg-accent text-background"
+                      ? "bg-accent text-white"
                       : "bg-surface text-muted hover:bg-surface-hover hover:text-foreground"
                   }`}
                 >
@@ -260,7 +260,7 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
                 onClick={() => setPreset("custom")}
                 className={`rounded-full px-4 py-2 text-sm transition-colors ${
                   preset === "custom"
-                    ? "bg-accent text-background"
+                    ? "bg-accent text-white"
                     : "bg-surface text-muted hover:bg-surface-hover hover:text-foreground"
                 }`}
               >
