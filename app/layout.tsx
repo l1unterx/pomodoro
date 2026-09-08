@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,6 +16,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Pomodoro",
   description: "A minimalist Pomodoro timer with stats and a leaderboard.",
+  appleWebApp: {
+    capable: true,
+    title: "Pomodoro",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -30,6 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <div className="absolute bottom-0 left-1/4 h-96 w-96 rounded-full bg-accent/10 blur-[120px]" />
         </div>
         <main className="relative flex-1">{children}</main>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );
