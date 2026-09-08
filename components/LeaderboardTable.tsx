@@ -13,7 +13,7 @@ export default function LeaderboardTable({
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-border bg-surface shadow-lg shadow-black/20 backdrop-blur-xl">
+    <div className="overflow-x-auto rounded-3xl border border-border bg-surface shadow-lg shadow-black/20 backdrop-blur-xl">
       <table className="w-full min-w-120 border-collapse text-left text-sm">
         <thead>
           <tr className="border-b border-border text-xs uppercase tracking-wide text-muted">

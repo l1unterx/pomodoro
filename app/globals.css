@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #000000;
-  --surface: rgba(168, 85, 247, 0.08);
-  --surface-hover: rgba(168, 85, 247, 0.16);
-  --border: rgba(168, 85, 247, 0.25);
-  --foreground: #f3f1f8;
-  --muted: #9691ab;
-  --accent: #a855f7;
-  --accent-break: #c084fc;
+  --background: #0b0807;
+  --surface: rgba(255, 138, 61, 0.06);
+  --surface-hover: rgba(255, 138, 61, 0.12);
+  --border: rgba(255, 255, 255, 0.09);
+  --foreground: #f7f1ec;
+  --muted: #9c9088;
+  --accent: #ff5f36;
+  --accent-break: #ffb648;
 }
 
 @theme inline {

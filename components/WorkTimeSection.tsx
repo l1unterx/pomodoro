@@ -108,7 +108,7 @@ export default function WorkTimeSection({
         </div>
 
         <div
-          className={`rounded-2xl border border-border bg-surface p-4 shadow-lg shadow-black/20 backdrop-blur-xl ${isPending ? "opacity-50" : ""}`}
+          className={`rounded-3xl border border-border bg-surface p-4 shadow-lg shadow-black/20 backdrop-blur-xl ${isPending ? "opacity-50" : ""}`}
         >
           <WorkTimeChart points={points} period={period} />
         </div>
