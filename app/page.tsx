@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { resolveActiveTimer } from "@/lib/timer";
-import { getLeaderboard, getUserWorkTimeSeries, getUserStats } from "@/lib/stats";
+import { getLeaderboard, getUserWorkTimeSeries, getUserStats, getTodayWorkSeconds } from "@/lib/stats";
 import { formatDuration } from "@/lib/format";
 import AuthPanel from "@/components/AuthPanel";
 import AccountBar from "@/components/AccountBar";
@@ -16,9 +16,10 @@ export default async function HomePage() {
     return <AuthPanel />;
   }
 
-  const [timerState, stats, monthlyPoints, leaderboard] = await Promise.all([
+  const [timerState, stats, todaySeconds, monthlyPoints, leaderboard] = await Promise.all([
     resolveActiveTimer(user.id),
     getUserStats(user.id),
+    getTodayWorkSeconds(user.id),
     getUserWorkTimeSeries(user.id, "month"),
     getLeaderboard(10),
   ]);
@@ -31,7 +32,8 @@ export default async function HomePage() {
 
       <section className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-12">
         <h2 className="text-sm font-medium uppercase tracking-widest text-muted">Your statistics</h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-5 gap-2 sm:gap-4">
+          <StatCard label="Today" value={formatDuration(todaySeconds)} />
           <StatCard label="Total work time" value={formatDuration(stats.totalWorkSeconds)} />
           <StatCard label="Completed sessions" value={String(stats.completedSessions)} />
           <StatCard label="Avg. session" value={formatDuration(stats.averageDurationSeconds)} />

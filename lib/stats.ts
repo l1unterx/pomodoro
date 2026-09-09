@@ -66,6 +66,25 @@ export async function getUserStats(userId: string): Promise<UserStats> {
   };
 }
 
+export async function getTodayWorkSeconds(userId: string): Promise<number> {
+  const db = await getDb();
+  const uid = new ObjectId(userId);
+  const since = new Date();
+  since.setHours(0, 0, 0, 0);
+  const until = new Date(since);
+  until.setDate(until.getDate() + 1);
+
+  const [result] = await db
+    .collection<PomodoroSessionDoc>("pomodoroSessions")
+    .aggregate<{ totalSeconds: number }>([
+      { $match: { userId: uid, endTime: { $gte: since, $lt: until } } },
+      { $group: { _id: null, totalSeconds: { $sum: "$duration" } } },
+    ])
+    .toArray();
+
+  return result?.totalSeconds ?? 0;
+}
+
 function dayKey(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
