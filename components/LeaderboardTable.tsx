@@ -15,14 +15,14 @@ export default function LeaderboardTable({
   }
 
   return (
-    <div className="overflow-x-auto rounded-3xl border border-border bg-surface shadow-lg shadow-black/20 backdrop-blur-xl">
-      <table className="w-full min-w-120 border-collapse text-left text-sm">
+    <div className="rounded-3xl border border-border bg-surface shadow-lg shadow-black/20 backdrop-blur-xl">
+      <table className="w-full table-fixed border-collapse text-left text-sm">
         <thead>
           <tr className="border-b border-border text-xs uppercase tracking-wide text-muted">
-            <th className="px-4 py-3 font-medium">Rank</th>
-            <th className="px-4 py-3 font-medium">Username</th>
-            <th className="px-4 py-3 font-medium">Total time</th>
-            <th className="px-4 py-3 font-medium">Sessions</th>
+            <th className="w-10 px-2 py-3 font-medium sm:w-auto sm:px-4">Rank</th>
+            <th className="px-2 py-3 font-medium sm:px-4">Username</th>
+            <th className="px-2 py-3 font-medium sm:px-4">Total time</th>
+            <th className="px-2 py-3 font-medium sm:px-4">Sessions</th>
           </tr>
         </thead>
         <tbody>
@@ -34,15 +34,15 @@ export default function LeaderboardTable({
               }`}
             >
               <td
-                className={`px-4 py-3 font-semibold ${i === 0 ? "text-accent" : "text-muted"}`}
+                className={`px-2 py-3 font-semibold sm:px-4 ${i === 0 ? "text-accent" : "text-muted"}`}
               >
                 {i + 1}
               </td>
-              <td className="px-4 py-3">{row.username}</td>
-              <td className="px-4 py-3 tabular-nums">
+              <td className="truncate px-2 py-3 sm:px-4">{row.username}</td>
+              <td className="truncate px-2 py-3 tabular-nums sm:px-4">
                 {formatDuration(row.totalWorkSeconds)}
               </td>
-              <td className="px-4 py-3 tabular-nums">
+              <td className="truncate px-2 py-3 tabular-nums sm:px-4">
                 {row.completedSessions}
               </td>
             </tr>
