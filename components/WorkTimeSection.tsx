@@ -108,9 +108,13 @@ export default function WorkTimeSection({
           Your statistics
         </h2>
         <div
-          className={`grid grid-cols-5 gap-2 sm:gap-4 ${isPending ? "opacity-50" : ""}`}
+          className={`grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-4 ${isPending ? "opacity-50" : ""}`}
         >
-          <StatCard label="Today" value={formatDuration(todaySeconds)} />
+          <StatCard
+            className="col-span-2 sm:col-span-1"
+            label="Today"
+            value={formatDuration(todaySeconds)}
+          />
           <StatCard
             label="Total time"
             value={formatDuration(stats.totalWorkSeconds)}
