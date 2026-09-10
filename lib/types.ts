@@ -5,6 +5,7 @@ export interface UserDoc {
   username: string;
   passwordHash: string;
   createdAt: Date;
+  themeColor?: string; // hex, e.g. "#a855f7" - the accent color the user picked
 }
 
 export interface AuthSessionDoc {
@@ -46,4 +47,5 @@ export interface PomodoroSessionDoc {
 export interface PublicUser {
   id: string;
   username: string;
+  themeColor: string | null;
 }

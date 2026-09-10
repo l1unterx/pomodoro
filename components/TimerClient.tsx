@@ -13,7 +13,12 @@ import {
 
 type PresetKey = "30-5" | "45-10" | "60-15" | "custom";
 
-const PRESETS: Record<Exclude<PresetKey, "custom">, { work: number; brk: number; label: string }> = {
+const TITLE_SUGGESTIONS = ["Hunting", "Pentesting", "Developing", "Learning"];
+
+const PRESETS: Record<
+  Exclude<PresetKey, "custom">,
+  { work: number; brk: number; label: string }
+> = {
   "30-5": { work: 30, brk: 5, label: "30 / 5" },
   "45-10": { work: 45, brk: 10, label: "45 / 10" },
   "60-15": { work: 60, brk: 15, label: "60 / 15" },
@@ -52,7 +57,15 @@ function PauseIcon({ className }: { className?: string }) {
 
 function RestartIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M3 12a9 9 0 1 0 3.4-7" />
       <path d="M3 4v5h5" />
     </svg>
@@ -69,7 +82,15 @@ function StopIcon({ className }: { className?: string }) {
 
 function EyeIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M1.5 12S5.6 5 12 5s10.5 7 10.5 7-4.1 7-10.5 7S1.5 12 1.5 12Z" />
       <circle cx="12" cy="12" r="3.2" />
     </svg>
@@ -78,7 +99,15 @@ function EyeIcon({ className }: { className?: string }) {
 
 function CoffeeIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z" />
       <path d="M17 9h1.5a2.7 2.7 0 0 1 0 5.4H17" />
       <path d="M7 2.5v2M11 2.5v2M15 2.5v2" />
@@ -126,15 +155,32 @@ function PillButton({
       onClick={onClick}
       disabled={disabled}
       className="flex items-center gap-2.5 rounded-full bg-surface-hover px-9 py-3.5 text-sm font-semibold uppercase tracking-widest text-foreground transition-all hover:scale-105 disabled:hover:scale-100"
-      style={{ boxShadow: `0 0 0 1px color-mix(in oklab, ${accent} 35%, var(--border)), 0 12px 30px -12px ${accent}` }}
+      style={{
+        boxShadow: `0 0 0 1px color-mix(in oklab, ${accent} 35%, var(--border)), 0 12px 30px -12px ${accent}`,
+      }}
     >
       {children}
     </button>
   );
 }
 
-export default function TimerClient({ initialState }: { initialState: ResolvedTimerState }) {
-  const { state, remaining, error, banner, busy, start, pause, resume, restart, stop } = useTimer(initialState);
+export default function TimerClient({
+  initialState,
+}: {
+  initialState: ResolvedTimerState;
+}) {
+  const {
+    state,
+    remaining,
+    error,
+    banner,
+    busy,
+    start,
+    pause,
+    resume,
+    restart,
+    stop,
+  } = useTimer(initialState);
 
   const [preset, setPreset] = useState<PresetKey>("30-5");
   const [customWork, setCustomWork] = useState(25);
@@ -152,30 +198,58 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
   const isIdle = state.status === "idle";
   const isRunning = state.status === "running";
   const isPaused = state.status === "paused";
-  const accent = !isIdle && state.mode === "break" ? "var(--accent-break)" : "var(--accent)";
+  const accent =
+    !isIdle && state.mode === "break" ? "var(--accent-break)" : "var(--accent)";
 
   useEffect(() => {
-    document.title = isIdle ? "Pomodoro" : `${formatTime(remaining)} · ${state.mode === "work" ? "Timer" : "Break"}`;
+    document.title = isIdle
+      ? "Pomodoro"
+      : `${formatTime(remaining)} · ${state.mode === "work" ? "Timer" : "Break"}`;
   }, [isIdle, remaining, state]);
 
   const plannedForRing = isIdle ? workMinutes * 60 : state.plannedDuration;
   const remainingForRing = isIdle ? workMinutes * 60 : remaining;
-  const progress = plannedForRing > 0 ? 1 - remainingForRing / plannedForRing : 0;
-  const ringOffset = RING_CIRCUMFERENCE * (1 - Math.min(1, Math.max(0, progress)));
+  const progress =
+    plannedForRing > 0 ? 1 - remainingForRing / plannedForRing : 0;
+  const ringOffset =
+    RING_CIRCUMFERENCE * (1 - Math.min(1, Math.max(0, progress)));
+
+  // Remount the progress circle on every discrete jump (mount, start,
+  // pause, resume, restart, stop, phase transition) so its first paint at
+  // the new offset has no previous frame to transition from - only the
+  // per-second local countdown tick (which doesn't change this key) should
+  // sweep smoothly via the CSS transition below.
+  const ringKey =
+    state.status === "running"
+      ? `running:${state.mode}:${state.endsAt}`
+      : state.status === "paused"
+        ? `paused:${state.mode}:${state.remainingSeconds}`
+        : "idle";
+
+  const titleHasError = isIdle && !!error;
 
   return (
-    <section id="timer" className="mx-auto flex w-full max-w-xl flex-col items-center gap-6 px-4 py-12">
+    <section
+      id="timer"
+      className="mx-auto flex w-full max-w-3xl  flex-col items-center gap-4 px-4 py-6 sm:gap-6 sm:py-12"
+    >
       {banner && (
         <div
           className="w-full rounded-2xl border px-4 py-3 text-center text-sm backdrop-blur-xl"
-          style={{ borderColor: accent, backgroundColor: `color-mix(in oklab, ${accent} 12%, transparent)` }}
+          style={{
+            borderColor: accent,
+            backgroundColor: `color-mix(in oklab, ${accent} 12%, transparent)`,
+          }}
         >
           {banner}
         </div>
       )}
 
-      <div className="flex w-full flex-col items-center gap-8 rounded-[2.5rem] border border-border bg-surface px-8 py-10 shadow-2xl shadow-black/50 backdrop-blur-2xl sm:px-12">
-        <div className="relative flex shrink-0 items-center justify-center" style={{ height: RING_SIZE, width: RING_SIZE }}>
+      <div className="flex w-full flex-col items-center gap-6 rounded-[2.5rem] border border-border bg-surface px-6 py-6 shadow-2xl shadow-black/50 backdrop-blur-2xl sm:gap-8 sm:px-12 sm:py-10">
+        <div
+          className="relative flex shrink-0 items-center justify-center"
+          style={{ height: RING_SIZE, width: RING_SIZE }}
+        >
           <svg width={RING_SIZE} height={RING_SIZE} className="-rotate-90">
             <circle
               cx={RING_SIZE / 2}
@@ -186,6 +260,7 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
               strokeWidth={RING_STROKE}
             />
             <circle
+              key={ringKey}
               cx={RING_SIZE / 2}
               cy={RING_SIZE / 2}
               r={RING_RADIUS}
@@ -195,7 +270,10 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
               strokeLinecap="round"
               strokeDasharray={RING_CIRCUMFERENCE}
               strokeDashoffset={ringOffset}
-              style={{ transition: "stroke-dashoffset 1s linear", filter: `drop-shadow(0 0 14px ${accent})` }}
+              style={{
+                transition: "stroke-dashoffset 1s linear",
+                filter: `drop-shadow(0 0 3px ${accent})`,
+              }}
             />
           </svg>
 
@@ -209,12 +287,16 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
                 <CoffeeIcon className="h-5 w-5" />
               )}
             </span>
-            <span className="font-mono text-5xl font-bold tabular-nums">{formatTime(remainingForRing)}</span>
+            <span className="font-mono text-5xl font-bold tabular-nums">
+              {formatTime(remainingForRing)}
+            </span>
             <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted">
               {isIdle ? "Ready" : state.mode === "work" ? "Focus" : "Break"}
             </span>
             {!isIdle && state.mode === "work" && state.workTitle && (
-              <span className="max-w-40 truncate text-xs text-muted">{state.workTitle}</span>
+              <span className="max-w-40 truncate text-xs text-muted">
+                {state.workTitle}
+              </span>
             )}
           </div>
         </div>
@@ -243,7 +325,9 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
         ) : (
           <div className="flex w-full flex-col items-center gap-6">
             <fieldset className="flex flex-wrap justify-center gap-2">
-              {(Object.keys(PRESETS) as Array<Exclude<PresetKey, "custom">>).map((key) => (
+              {(
+                Object.keys(PRESETS) as Array<Exclude<PresetKey, "custom">>
+              ).map((key) => (
                 <button
                   key={key}
                   onClick={() => setPreset(key)}
@@ -307,12 +391,37 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
                 value={title}
                 maxLength={MAX_TITLE_LENGTH}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Fix authentication vulnerability"
-                className="rounded-xl border border-border bg-surface px-3 py-2.5 focus:border-accent focus:outline-none"
+                placeholder="e.g. Hunting"
+                aria-invalid={titleHasError}
+                className={`rounded-xl border bg-surface px-3 py-2.5 focus:outline-none ${
+                  titleHasError
+                    ? "border-red-500 focus:border-red-500"
+                    : "border-border focus:border-accent"
+                }`}
               />
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {TITLE_SUGGESTIONS.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => setTitle(suggestion)}
+                    className={`rounded-full px-3 py-1 text-xs transition-colors ${
+                      title === suggestion
+                        ? "bg-accent text-white"
+                        : "bg-surface text-muted hover:bg-surface-hover hover:text-foreground"
+                    }`}
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <PillButton onClick={() => void handleStart()} disabled={busy} accent={accent}>
+            <PillButton
+              onClick={() => void handleStart()}
+              disabled={busy}
+              accent={accent}
+            >
               <PlayIcon className="h-4 w-4" />
               Start
             </PillButton>
@@ -320,7 +429,9 @@ export default function TimerClient({ initialState }: { initialState: ResolvedTi
         )}
       </div>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && !titleHasError && (
+        <p className="text-sm text-red-400">{error}</p>
+      )}
     </section>
   );
 }

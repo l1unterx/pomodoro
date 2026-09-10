@@ -41,3 +41,12 @@ export function validateTitle(title: string): string | null {
   }
   return null;
 }
+
+const HEX_COLOR_REGEX = /^#[0-9a-fA-F]{6}$/;
+
+export function validateHexColor(color: string): string | null {
+  if (!HEX_COLOR_REGEX.test(color)) {
+    return "Color must be a hex value like #a855f7.";
+  }
+  return null;
+}

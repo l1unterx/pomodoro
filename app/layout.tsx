@@ -1,6 +1,8 @@
+import type { CSSProperties } from "react";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { getCurrentUser } from "@/lib/auth";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,11 +30,14 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const user = await getCurrentUser();
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      style={user?.themeColor ? ({ "--accent": user.themeColor } as CSSProperties) : undefined}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <div className="pointer-events-none fixed inset-0 overflow-hidden">

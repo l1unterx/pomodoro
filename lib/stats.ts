@@ -2,19 +2,20 @@ import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import type { PomodoroSessionDoc } from "@/lib/types";
 
-export interface UserStats {
-  totalWorkSeconds: number;
-  completedSessions: number;
-  averageDurationSeconds: number;
-  stdDevSeconds: number;
-}
-
 export type ChartPeriod = "week" | "month" | "year";
+
+export interface SessionEntry {
+  id: string;
+  title: string;
+  startTime: string; // ISO
+  endTime: string; // ISO
+  duration: number; // seconds
+}
 
 export interface WorkTimePoint {
   key: string; // "YYYY-MM-DD" for week/month, "YYYY-MM" for year
   totalSeconds: number;
-  titles: string[];
+  sessions: SessionEntry[];
 }
 
 export interface LeaderboardRow {
@@ -22,48 +23,6 @@ export interface LeaderboardRow {
   username: string;
   totalWorkSeconds: number;
   completedSessions: number;
-}
-
-export async function getUserStats(userId: string): Promise<UserStats> {
-  const db = await getDb();
-  const uid = new ObjectId(userId);
-
-  const [result] = await db
-    .collection<PomodoroSessionDoc>("pomodoroSessions")
-    .aggregate<{
-      totalWorkSeconds: number;
-      completedSessions: number;
-      averageDurationSeconds: number;
-      stdDevSeconds: number | null;
-    }>([
-      { $match: { userId: uid } },
-      {
-        $group: {
-          _id: null,
-          totalWorkSeconds: { $sum: "$duration" },
-          completedSessions: { $sum: 1 },
-          averageDurationSeconds: { $avg: "$duration" },
-          stdDevSeconds: { $stdDevSamp: "$duration" },
-        },
-      },
-    ])
-    .toArray();
-
-  if (!result) {
-    return {
-      totalWorkSeconds: 0,
-      completedSessions: 0,
-      averageDurationSeconds: 0,
-      stdDevSeconds: 0,
-    };
-  }
-
-  return {
-    totalWorkSeconds: result.totalWorkSeconds,
-    completedSessions: result.completedSessions,
-    averageDurationSeconds: result.averageDurationSeconds,
-    stdDevSeconds: result.stdDevSeconds ?? 0,
-  };
 }
 
 export async function getTodayWorkSeconds(userId: string): Promise<number> {
@@ -135,13 +94,19 @@ export async function getUserWorkTimeSeries(
 
   const rows = await db
     .collection<PomodoroSessionDoc>("pomodoroSessions")
-    .aggregate<{ _id: string; totalSeconds: number; titles: string[] }>([
+    .aggregate<{
+      _id: string;
+      totalSeconds: number;
+      sessions: { id: ObjectId; title: string; startTime: Date; endTime: Date; duration: number }[];
+    }>([
       { $match: { userId: uid, endTime: { $gte: since, $lt: until } } },
       {
         $group: {
           _id: { $dateToString: { format: dateFormat, date: "$endTime" } },
           totalSeconds: { $sum: "$duration" },
-          titles: { $push: "$title" },
+          sessions: {
+            $push: { id: "$_id", title: "$title", startTime: "$startTime", endTime: "$endTime", duration: "$duration" },
+          },
         },
       },
     ])
@@ -161,7 +126,17 @@ export async function getUserWorkTimeSeries(
       key = dayKey(d);
     }
     const found = byKey.get(key);
-    points.push({ key, totalSeconds: found?.totalSeconds ?? 0, titles: found?.titles ?? [] });
+    points.push({
+      key,
+      totalSeconds: found?.totalSeconds ?? 0,
+      sessions: (found?.sessions ?? []).map((s) => ({
+        id: s.id.toHexString(),
+        title: s.title,
+        startTime: s.startTime.toISOString(),
+        endTime: s.endTime.toISOString(),
+        duration: s.duration,
+      })),
+    });
   }
   return points;
 }

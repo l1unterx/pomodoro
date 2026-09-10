@@ -61,8 +61,9 @@ export default function WorkTimeChart({ points, period }: { points: WorkTimePoin
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
   const maxSeconds = Math.max(1, ...points.map((p) => p.totalSeconds));
+  const total = points.reduce((sum, p) => sum + p.totalSeconds, 0);
   const { avg, std } = statsSinceStart(points, period);
-  const stdColor = std < avg / 2 ? "#ef4444" : "#22c55e";
+  const stdColor = std < avg / 2 ? "#22c55e" : "#ef4444";
 
   const slotWidth = points.length > 0 ? PLOT_W / points.length : 0;
   const valueToY = (value: number) => MARGIN.top + PLOT_H - (Math.min(value, maxSeconds) / maxSeconds) * PLOT_H;
@@ -82,13 +83,18 @@ export default function WorkTimeChart({ points, period }: { points: WorkTimePoin
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-2 text-xs">
         <span className="flex items-center gap-1.5 rounded-full bg-background px-2.5 py-1">
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "var(--accent)" }} />
+          <span className="text-muted">Total</span>
+          <span className="font-medium">{formatDuration(total)}</span>
+        </span>
+        <span className="flex items-center gap-1.5 rounded-full bg-background px-2.5 py-1">
           <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "#9ca3af" }} />
-          <span className="text-muted">Avg</span>
+          <span className="text-muted">Avg / day</span>
           <span className="font-medium">{formatDuration(avg)}</span>
         </span>
         <span className="flex items-center gap-1.5 rounded-full bg-background px-2.5 py-1">
           <span className="h-2 w-2 rounded-full" style={{ backgroundColor: stdColor }} />
-          <span className="text-muted">Std dev</span>
+          <span className="text-muted">Std dev / day</span>
           <span className="font-medium">{formatDuration(std)}</span>
         </span>
       </div>

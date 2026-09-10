@@ -3,8 +3,8 @@
 import { redirect } from "next/navigation";
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
-import { createSession, destroySession, hashPassword, verifyPassword } from "@/lib/auth";
-import { validatePassword, validateUsername } from "@/lib/validation";
+import { createSession, destroySession, hashPassword, requireUser, verifyPassword } from "@/lib/auth";
+import { validateHexColor, validatePassword, validateUsername } from "@/lib/validation";
 import type { UserDoc } from "@/lib/types";
 
 export interface AuthFormState {
@@ -80,4 +80,16 @@ export async function loginAction(
 export async function logoutAction(): Promise<void> {
   await destroySession();
   redirect("/");
+}
+
+export async function updateThemeColorAction(color: string): Promise<void> {
+  const user = await requireUser();
+
+  const colorError = validateHexColor(color);
+  if (colorError) throw new Error(colorError);
+
+  const db = await getDb();
+  await db
+    .collection<UserDoc>("users")
+    .updateOne({ _id: new ObjectId(user.id) }, { $set: { themeColor: color } });
 }

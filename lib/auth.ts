@@ -25,6 +25,7 @@ function toPublicUser(user: UserDoc): PublicUser {
   return {
     id: user._id.toHexString(),
     username: user.username,
+    themeColor: user.themeColor ?? null,
   };
 }
 
